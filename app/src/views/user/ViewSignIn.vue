@@ -5,7 +5,7 @@
         <h1 class="mb-8 text-center">
           Sign In to PixelPosh
         </h1>
-        <form @submit.prevent="handleSubmit">
+        <form @submit.prevent="validateForm">
           <input
             v-model="email"
             type="text"
@@ -25,11 +25,27 @@
           >
             Sign in with email
           </button>
+            <div v-if="formErrors.length">
+              <ul class="py-1 text-pp-red">
+                <li
+                  v-for="(error, index) in formErrors" :key="index"
+                >
+                  {{ error }}
+                </li>
+              </ul>
+            </div>
+            <div v-if="firebaseError">
+              <ul class="py-1 text-pp-red">
+                <li>
+                  {{ firebaseError }}
+                </li>
+              </ul>
+            </div>
         </form>
         <div class="text-center text-sm text-grey-dark mt-4">
           <router-link
             class="text-pp-red underline"
-            to="/user/lost_password"
+            to="/user/lost-password"
           >
             Lost password?
           </router-link>
@@ -40,7 +56,7 @@
         New to Pixelposh?
         <router-link
           class="text-pp-red underline"
-          to="/user/sign_up"
+          to="/user/sign-up"
         >
           Sign Up
         </router-link>
@@ -50,19 +66,55 @@
 </template>
 
 <script>
-import { ref } from 'vue';
+import { ref, onUnmounted } from 'vue';
+import { useRouter } from 'vue-router';
+import useSignIn from '../../composables/useSignIn';
 
 export default {
   name: 'ViewSignIn',
   setup() {
     const email = ref('');
     const password = ref('');
+    const formErrors = ref([]);
+    const router = useRouter();
+    const { firebaseError, firebaseSignIn } = useSignIn();
 
-    const handleSubmit = () => {
-      console.log(email.value, password.value);
+    const validateForm = async () => {
+      formErrors.value = [];
+      firebaseError.value = null;
+
+      // check email has value and valid
+      if (email.value === '') {
+        formErrors.value.push('Email required.')
+      } else if (!validEmail(email.value)) {
+        formErrors.value.push('Valid email required.')
+      }
+      
+      // Check password has value
+      if (password.value === '') {
+        formErrors.value.push('Password required.')
+      }
+
+      // If form fields are ok, send to firebase
+      if (formErrors.value.length === 0) {
+        await firebaseSignIn(email.value, password.value);
+        if (!firebaseError.value) {
+          router.push('/');
+        }
+      }
     };
 
-    return { email, password, handleSubmit };
+    const validEmail = (email) => {
+      const emailRegexTest = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+      return emailRegexTest.test(email);
+    }
+
+    onUnmounted(() => {
+      firebaseError.value = null;
+      formErrors.value = [];
+    });
+
+    return { email, password, validateForm, firebaseError, formErrors };
   },
 };
 </script>

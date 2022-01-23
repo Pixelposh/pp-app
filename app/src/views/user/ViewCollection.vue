@@ -1,6 +1,6 @@
 <template>
-  <div class="page-dashbaord">
-    <h1>Dashboard</h1>
+  <div class="container mx-auto px-4 pt-10">
+    <h1>Collection</h1>
     <p>
       Lorem ipsum dolor sit amet consectetur, adipisicing elit. Ipsam nostrum autem nobis
       eligendi, obcaecati minus dolor pariatur quo quasi vero officia magni magnam
@@ -13,6 +13,6 @@
 
 <script>
 export default {
-  name: 'ViewDashboard',
+  name: 'ViewCollection',
 };
 </script>

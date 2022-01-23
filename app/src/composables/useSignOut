@@ -1,0 +1,15 @@
+import { auth } from '../core/firebase/config';
+import { signOut } from 'firebase/auth';
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
+
+const signUserOut = () => {
+    signOut(auth);
+}
+
+const useSignUserOut = () => {
+    return { signUserOut }
+}
+
+export default useSignUserOut;

@@ -1,5 +1,5 @@
 <template>
-  <div class="page-profile">
+  <div class="container mx-auto px-4 pt-10">
     <h1>Profile</h1>
     <p>
       Lorem ipsum dolor sit amet consectetur, adipisicing elit. Ipsam nostrum autem nobis

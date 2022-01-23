@@ -1,5 +1,15 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import ViewHome from '../views/ViewHome.vue';
+import { auth } from '../core/firebase/config';
+
+const requireAuth = (to, from, next) => {
+  let user = auth.currentUser;
+  if(!user) {
+    next({ name: 'ViewSignIn' })
+  } else {
+    next();
+  }
+}
 
 const routes = [
   {
@@ -31,24 +41,26 @@ const routes = [
     path: '/user/profile',
     name: 'ViewProfile',
     component: () => import('../views/user/ViewProfile.vue'),
+    beforeEnter: requireAuth
   },
   {
-    path: '/user/dashboard',
-    name: 'ViewDashboard',
-    component: () => import('../views/user/ViewDashboard.vue'),
+    path: '/user/collection',
+    name: 'ViewCollection',
+    component: () => import('../views/user/ViewCollection.vue'),
+    beforeEnter: requireAuth
   },
   {
-    path: '/user/sign_in',
+    path: '/user/sign-in',
     name: 'ViewSignIn',
     component: () => import('../views/user/ViewSignIn.vue'),
   },
   {
-    path: '/user/sign_up',
+    path: '/user/sign-up',
     name: 'ViewSignUp',
     component: () => import('../views/user/ViewSignUp.vue'),
   },
   {
-    path: '/user/lost_password',
+    path: '/user/lost-password',
     name: 'ViewLostPassword',
     component: () => import('../views/user/ViewLostPassword.vue'),
   },

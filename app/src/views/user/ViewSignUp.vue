@@ -5,7 +5,7 @@
     >
       <div class="bg-white px-6 py-8 rounded shadow-lg text-black w-full">
         <h1 class="mb-8 text-center">Sign Up to PixelPosh</h1>
-        <form @submit.prevent="handleSubmit">
+        <form @submit.prevent="validateForm">
           <input
             v-model="email"
             type="text"
@@ -24,8 +24,21 @@
           >
             Sign Up with Email
           </button>
-          <div v-if="error" class="text-center py-1 text-pp-red">
-            {{ error }}
+          <div v-if="formErrors.length">
+            <ul class="py-1 text-pp-red">
+              <li
+                v-for="(error, index) in formErrors" :key="index"
+              >
+                {{ error }}
+              </li>
+            </ul>
+          </div>
+          <div v-if="firebaseError">
+            <ul class="py-1 text-pp-red">
+              <li>
+                {{ firebaseError }}
+              </li>
+            </ul>
           </div>
         </form>
         <div class="text-center text-sm text-grey-dark mt-4">
@@ -49,7 +62,7 @@
       </div>
       <div class="text-grey-dark mt-6">
         Already have an account?
-        <router-link class="text-pp-red underline" to="/user/sign_in">
+        <router-link class="text-pp-red underline" to="/user/sign-in">
           Sign In
         </router-link>
       </div>
@@ -68,33 +81,48 @@ export default {
   setup() {
     const email = ref('');
     const password = ref('');
-    const formValidated = ref(false);
-    const formError = ref('');
+    const formErrors = ref([]);
     const router = useRouter();
-    const { fbError, firebaseSignUp } = useSignUp();
+    const { firebaseError, firebaseSignUp } = useSignUp();
     const { sendVerification } = useSendEmailVerification();
 
-    const validateForm = () => {
-      if (email.value === '' || password.value === '') {
-        console.log('missing fields');
+    const validateForm = async () => {
+      formErrors.value = [];
+      firebaseError.value = null;
+
+      // check email has value and valid
+      if (email.value === '') {
+        formErrors.value.push('Email required.')
+      } else if (!validEmail(email.value)) {
+        formErrors.value.push('Valid email required.')
+      }
+      
+      // Check password has value
+      if (password.value === '') {
+        formErrors.value.push('Password required.')
+      }
+
+      // If form fields are ok, send to firebase
+      if (formErrors.value.length === 0) {
+        await firebaseSignUp(email.value, password.value);
+        if (!firebaseError.value) {
+          await sendVerification();
+          router.push('/');
+        }
       }
     };
 
-    const handleSubmit = async () => {
-      validateForm();
-      await firebaseSignUp(email.value, password.value);
-      if (!fbError.value) {
-        await sendVerification();
-        router.push('/');
-      }
-    };
+    const validEmail = (email) => {
+      const emailRegexTest = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+      return emailRegexTest.test(email);
+    }
 
     onUnmounted(() => {
-      fbError.value = null;
-      formError.value = null;
+      firebaseError.value = null;
+      formErrors.value = [];
     });
 
-    return { email, password, handleSubmit, fbError, formError, formValidated };
+    return { email, password, validateForm, firebaseError, formErrors };
   },
 };
 </script>
